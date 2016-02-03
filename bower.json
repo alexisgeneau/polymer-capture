@@ -1,18 +1,19 @@
 {
   "name": "polymer-capture",
-  "version": "1.0.7",
+  "version": "1.0.0",
   "authors": [
-    "Anonymous <anonymous@example.com>"
+    "Alexisgeneau <contact@alexis-geneau.fr>"
   ],
   "description": "An element providing a solution to no problem in particular.",
   "keywords": [
     "web-component",
     "polymer",
-    "seed"
+    "seed",
+    "web-components"
   ],
   "main": "polymer-capture.html",
   "license": "http://polymer.github.io/LICENSE.txt",
-  "homepage": "https://github.com/<USERNAME>/seed-element/",
+  "homepage": "https://github.com/alexisgeneau/seed-element/",
   "ignore": [
     "/.*",
     "/test/"
