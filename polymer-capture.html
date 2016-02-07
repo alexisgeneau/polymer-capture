@@ -12,106 +12,146 @@ subject to an additional IP rights grant found at http://polymer.github.io/PATEN
 <link rel="import" href="../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../iron-icons/iron-icons.html">
 <link rel="import" href="../iron-icons/image-icons.html">
+<link rel="import" href="../iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../iron-form-element-behavior/iron-form-element-behavior.html">
+<script src="../blueimp-canvas-to-blob/js/canvas-to-blob.min.js"></script>
 
 <!--
-An element providing a solution to no problem in particular.
 
 Example:
 
     <polymer-capture></polymer-capture>
-
-Example:
-
-    <polymer-capture>
-      <h2>Hello polymer-capture</h2>
-    </polymer-capture>
 
 @demo demo/index.html
 @hero hero.svg
 -->
 
 <dom-module id="polymer-capture">
-  <template>
-    <style>
-      :host {
-        display: block;
-        box-sizing: border-box;
-        position: relative;
-      }
-      #canvas, #picture{
-        position: absolute;
-        top: 0;
-        left: 0;
-      }
-      #snapshot{
-        position: absolute;
-        bottom: 10px;
-      }
-      #back{
-        position: absolute;
-        top: 5px;
-        left: 5px;
-        display: none;
-      }
-    </style>
-    <video id="video" width$="[[width]]"></video>
-    <canvas id="canvas" width$="[[width]]"></canvas>
-    <template is="dom-if" if="[[_img]]">
-    <img src$="[[_img]]" id="picture" alt="tmp_picture">
-    </template>
-    <paper-icon-button icon="image:photo-camera" style="color:white;" id="snapshot" on-tap="_snapshot"></paper-icon-button>
-    <paper-icon-button icon="icons:arrow-back" style="color:white;" id="back" on-tap="_return"></paper-icon-button>
+<template>
+  <style>
+    :host {
+      display: block;
+      box-sizing: border-box;
+      position: relative;
+      width: 250px;
+    }
+    #snapshot{
+      position: absolute;
+      bottom: 10px;
+    }
+    #canvas {
+      position: absolute;
+    }
+    #video {
+      width: 100%;
+    }
+    #back{
+      position: absolute;
+      top: 5px;
+      left: 5px;
+    }
+    #download{
+      position: absolute;
+      bottom: 5px;
+      right: 50px;
+    }
+    #valid{
+      position: absolute;
+      bottom: 5px;
+      right: 5px;
+    }
+    #buttonsWrapper {
+      @apply(--layout-fit);
+    }
+    .after{
+      display: none;
+    }
+  </style>
+  <video id="video"></video>
+  <canvas id="canvas"></canvas>
+  <template is="dom-if" if="[[_img]]">
+    <img src$="[[b64]]" id="picture" alt="tmp_picture">
   </template>
-  <script src="app.js"></script>
-  <script>
-    Polymer({
-      is: 'polymer-capture',
+  <div id="buttonsWrapper">
+    <paper-icon-button class="before" icon="image:photo-camera" style="color:white;" id="snapshot" on-tap="_snapshot"></paper-icon-button>
+    <div class="after">
+      <paper-icon-button icon="icons:check" style="color:white;" id="valid" on-tap="_valid"></paper-icon-button>
+      <paper-icon-button icon="icons:file-download" style="color:white;" id="download" on-tap="_download"></paper-icon-button>
+      <paper-icon-button icon="icons:arrow-back" style="color:white;" id="back" on-tap="_return"></paper-icon-button>
+    </div>
+  </div>
+</template>
+<script src="app.js"></script>
+<script>
+  Polymer({
+    is: 'polymer-capture',
+    behaviors: [
+    Polymer.IronFormElementBehavior
+    ],
 
-      properties: {
-        width:{
-          type:Number,
-          value:250
-        },
-        height:{
-          type:Number
-        },
-        _img:{
-          type:String
-        }
-
+    properties: {
+      width:{
+        type:Number,
+        value:250
       },
-      attached:function(){
-        this.$.snapshot.style.left=this.width - 40+'px';
+      height:{
+        type:Number
       },
-      _snapshot:function(e){
-        this.height=this.$.video.clientHeight;
-        var canvas=this.$.canvas;
-        canvas.width = this.width;
-    canvas.height = this.height;
-    canvas.getContext('2d').drawImage(this.$.video, 0, 0, this.width, this.height);
-    var data = canvas.toDataURL('image/png');
-    this.$.snapshot.style.display="none";
-    this.$.video.style.display="none";
-    this.$.canvas.style.display="none";
-    this.$.back.style.display="block";
-    this._img = data;
-    e.preventDefault();
+      _img:{
+        type:String
       },
-      _return:function(){
-        var canvas= this.$.canvas;
-        var ctx=canvas.getContext('2d');
-        canvas.width = this.width;
-    canvas.height = this.height;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        this._img=undefined;
-    this.$.snapshot.style.display="block";
-    this.$.video.style.display="block";
-    this.$.canvas.style.display="block";
-    this.$.back.style.display="none";
-
+      value:{
+        type:String
+      },
+      b64:{
+        type:String
       }
 
+    },
+    attached:function(){
+      this.$.snapshot.style.left=this.width - 40+'px';
+      this.height=this.$.video.clientHeight;
+    },
+    _snapshot:function(e){
+      this.height=this.$.video.clientHeight;
+      var canvas=this.$.canvas;
+      canvas.width = this.width;
+      canvas.height = this.height;
+      canvas.getContext('2d').drawImage(this.$.video, 0, 0, this.width, this.height);
+      var data = canvas.toDataURL();
+      this.b64 = data;
+      canvas.toBlob(function(blob) {
+        data = blob;
+      }.bind(this));
+      this.$.snapshot.style.display="none";
+      this.$.video.style.display="none";
+      this.$.canvas.style.display="none";
+      this.$$('.after').style.display="block";
+      this._img = data;
+      e.preventDefault();
+    },
+    _return:function(){
+      var canvas= this.$.canvas;
+      var ctx=canvas.getContext('2d');
+      canvas.width = this.width;
+      canvas.height = this.height;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      this._img=undefined;
+      this.$.snapshot.style.display="block";
+      this.$.video.style.display="block";
+      this.$.canvas.style.display="block";
+      this.$$('.after').style.display="none";
 
-    });
-  </script>
+    },
+    _download:function(){
+      window.open(this._img,"_blank", null);
+    },
+    _valid:function(){
+      this.value=this._img;
+      console.log(this.value);
+    }
+
+
+  });
+</script>
 </dom-module>
