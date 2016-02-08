@@ -14,4 +14,4 @@ and import into your application
 ```
 
 ## Demo and Doc
-See the [component page](http://alexisgeneau.github.io/polymer-capture) for more information.
+See the [component page](https://alexisgeneau.github.io/polymer-capture) for more information.
